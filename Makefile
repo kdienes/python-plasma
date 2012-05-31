@@ -1,4 +1,6 @@
-.PHONY: build
+.PHONY: setup build all
+
+all:	build
 
 setup:
 	ln -sf build/lib.macosx-10.7-intel-2.7/libplasma.so .

@@ -152,10 +152,42 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
   slaw s;
 
   if (PyLong_Check (p)) {
+
     s = slaw_int32 (PyLong_AsLong (p));
+
   } else if (PyString_Check (p)) {
+
     s = slaw_string (PyString_AsString (p));
+
+  } else if (PyDict_Check (p)) {
+
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    
+    slabu *su = slabu_new ();
+    int i = 0;
+
+    for (;;) {
+      int ret = PyDict_Next (p, &pos, &key, &value);
+      if (ret == 0) { break; }
+      
+      slaw car, cdr;
+
+      oret = PythonToSlaw (key, &car);
+      if (oret != OB_OK) { return oret; }
+
+      oret = PythonToSlaw (value, &cdr);
+      if (oret != OB_OK) { return oret; }
+
+      int rr = slabu_list_add (su, slaw_cons (car, cdr));
+      assert (rr >= 0);
+    }
+    
+    s = slaw_map (su);
+
+
   } else if (PyTuple_Check (p)) {
+
     slabu *su = slabu_new ();
     int i = 0;
 
@@ -174,6 +206,7 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
     s = slaw_list (su);
 
   } else if (PyList_Check (p)) {
+
     slabu *su = slabu_new ();
     int i = 0;
 
