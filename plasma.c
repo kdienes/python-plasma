@@ -73,6 +73,9 @@ static PyObject *SlawToPython (bslaw s)
     if (slaw_is_int32 (s)) {
       int32 v = *(slaw_int32_emit (s));
       ret = PyLong_FromLong (v);
+    } else if (slaw_is_unt32 (s)) {
+      unt32 v = *(slaw_unt32_emit (s));
+      ret = PyLong_FromUnsignedLong (v);
     } else if (slaw_is_int16 (s)) {
       int16 v = *(slaw_int16_emit (s));
       ret = PyLong_FromLong (v);
@@ -133,15 +136,24 @@ static int HoseInit (HoseObject *self, PyObject *args, PyObject *keywords)
   return 0;
 }
 
-static PyObject *HoseFetch (HoseObject *self, PyObject *unused)
+static PyObject *HoseFetch (HoseObject *self, PyObject *args)
 {
   pool_timestamp stamp;
   int64 index;
   protein p;
+  long timeout;
+
+  if (! PyArg_ParseTuple (args, "l", &timeout)) {
+    return NULL;
+  }
 
   for (;;) {
     ob_retort ret;
-    ret = pool_await_next (self->hose, POOL_WAIT_FOREVER, &p, &stamp, &index);
+    ret = pool_await_next (self->hose, timeout, &p, &stamp, &index);
+    if (ret == POOL_AWAIT_TIMEDOUT) {
+      Py_INCREF (Py_None);
+      return Py_None;
+    }
     return SlawToPython (p);
   }
 }
@@ -270,7 +282,7 @@ static PyMemberDef HoseMembers[] = {
 };
 
 static PyMethodDef HoseMethods[] = {
-  { "fetch", (PyCFunction) HoseFetch, METH_NOARGS,
+  { "fetch", (PyCFunction) HoseFetch, METH_VARARGS,
     "Fetch a protein from the pool." },
   { "deposit", (PyCFunction) HoseDeposit, METH_VARARGS,
     "Fetch a protein from the pool." },
