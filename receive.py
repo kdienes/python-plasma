@@ -4,44 +4,65 @@ import tornado.httpclient
 import urllib2
 import libplasma
 
-loop = tornado.ioloop.IOLoop.instance ()
-client = tornado.httpclient.AsyncHTTPClient ()
-hose = libplasma.hose ('tile-server');
+class mapserver:
 
-def handle_request (response):
+    def __init__ (self):
 
-    if response.error:
-        print "Error:", response.error
-    else:
-        f = file (response.request.cache, 'w')
-        f.write (response.body)
-        f.close ()
-        print [['tile-response'], { 'id' : response.request.id }]
-        hose.deposit (['tile-response'], { 'id' : response.request.id })
+        self.requests = []
+        self.npending = 0
+        self.maxpending = 8
+        self.loop = tornado.ioloop.IOLoop.instance ()
+        self.client = tornado.httpclient.AsyncHTTPClient ()
+        self.hose = libplasma.hose ('tile-server');
 
-def handle_protein (p):
+        self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_pool, 100, io_loop = self.loop)
+        self.scheduler.start ()
 
-    descrips, ingests = p
-    if not 'tile-request' in descrips:
-        return
+        self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 100, io_loop = self.loop)
+        self.rscheduler.start ()
 
-    print p
-    r = tornado.httpclient.HTTPRequest (url = ingests['url'])
-    r.cache = ingests['cache']
-    r.id = ingests['id']
+    def handle_request (self, r):
 
-    client.fetch (r, handle_request)
+        self.npending -= 1
+        if r.error:
+            print "Error:", r.error
+        else:
+            f = file (r.request.cache, 'w')
+            f.write (r.body)
+            f.close ()
+            print [['tile-response'], { 'id' : r.request.id }]
+            self.hose.deposit (['tile-response'], { 'id' : r.request.id })
 
-def handle_pool ():
+    def handle_protein (self, p):
 
-    while True:
-        r = hose.fetch (0)
-        if not r:
+        descrips, ingests = p
+        if not 'tile-request' in descrips:
             return
-        handle_protein (r)
 
-scheduler = tornado.ioloop.PeriodicCallback (handle_pool, 100, io_loop = loop)
-scheduler.start ()
-loop.start ()
+        print p
+        r = tornado.httpclient.HTTPRequest (url = ingests['url'])
+        r.cache = ingests['cache']
+        r.id = ingests['id']
+        self.requests.insert (0, r)
+
+    def handle_pool (self):
+
+        while True:
+            r = self.hose.fetch (0)
+            if not r:
+                return
+            self.handle_protein (r)
+
+    def make_requests (self):
+
+        while self.npending < self.maxpending:
+            if (len (self.requests) == 0):
+                return
+            self.npending += 1
+            r = self.requests.pop (0)
+            self.client.fetch (r, self.handle_request)
+
+server = mapserver ()
+server.loop.start ()
 
 
