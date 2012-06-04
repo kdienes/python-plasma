@@ -4,13 +4,16 @@ import tornado.httpclient
 import urllib2
 import libplasma
 
+import os
+import os.path
+
 class mapserver:
 
     def __init__ (self):
 
         self.requests = []
         self.npending = 0
-        self.maxpending = 8
+        self.maxpending = 4
         self.loop = tornado.ioloop.IOLoop.instance ()
         self.client = tornado.httpclient.AsyncHTTPClient ()
         self.hose = libplasma.hose ('tile-server');
@@ -27,6 +30,10 @@ class mapserver:
         if r.error:
             print "Error:", r.error
         else:
+            try:
+                os.mkdir (os.path.dirname (r.request.cache))
+            except:
+                pass
             f = file (r.request.cache, 'w')
             f.write (r.body)
             f.close ()
@@ -64,5 +71,3 @@ class mapserver:
 
 server = mapserver ()
 server.loop.start ()
-
-
