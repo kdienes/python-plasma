@@ -158,9 +158,9 @@ static PyObject *HoseFetch (HoseObject *self, PyObject *args)
   }
 }
 
-static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
+static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
 {
-  ob_retort oret;
+  PyObject *pret = NULL;
   slaw s;
 
   if (PyLong_Check (p)) {
@@ -177,7 +177,6 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
     Py_ssize_t pos = 0;
     
     slabu *su = slabu_new ();
-    int i = 0;
 
     for (;;) {
       int ret = PyDict_Next (p, &pos, &key, &value);
@@ -185,14 +184,14 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
       
       slaw car, cdr;
 
-      oret = PythonToSlaw (key, &car);
-      if (oret != OB_OK) { return oret; }
+      pret = PythonToSlaw (key, &car);
+      if (pret == NULL) { return pret; }
 
-      oret = PythonToSlaw (value, &cdr);
-      if (oret != OB_OK) { return oret; }
+      pret = PythonToSlaw (value, &cdr);
+      if (pret == NULL) { return pret; }
 
-      int rr = slabu_list_add (su, slaw_cons (car, cdr));
-      assert (rr >= 0);
+      int64 rr = slabu_list_add (su, slaw_cons (car, cdr));
+      if (rr < 0) { PYTHON_OBCHECK (rr) };
     }
     
     s = slaw_map (su);
@@ -208,11 +207,11 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
       PyObject *pp = PyTuple_GetItem (p, i);
       slaw ns;
 
-      oret = PythonToSlaw (pp, &ns);
-      if (oret != OB_OK) { return oret; }
+      pret = PythonToSlaw (pp, &ns);
+      if (pret == NULL) { return pret; }
 
-      int rr = slabu_list_add (su, ns);
-      assert (rr >= 0);
+      int64 rr = slabu_list_add (su, ns);
+      if (rr < 0) { PYTHON_OBCHECK (rr) };
     }
     
     s = slaw_list (su);
@@ -227,21 +226,21 @@ static ob_retort PythonToSlaw (PyObject *p, slaw *pslaw)
       PyObject *pp = PyList_GetItem (p, i);
       slaw ns;
 
-      oret = PythonToSlaw (pp, &ns);
-      if (oret != OB_OK) { return oret; }
+      pret = PythonToSlaw (pp, &ns);
+      if (pret == NULL) { return pret; }
 
-      int rr = slabu_list_add (su, ns);
-      assert (rr >= 0);
+      int64 rr = slabu_list_add (su, ns);
+      if (rr < 0) { PYTHON_OBCHECK (rr) };
     }
     
     s = slaw_list (su);
 
   } else {
-    return OB_INVALID_ARGUMENT;
+    PYTHON_OBCHECK (OB_INVALID_ARGUMENT);
   }
   
   *pslaw = s;
-  return OB_OK;
+  return Py_None;
 }
 
 static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
@@ -259,10 +258,10 @@ static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
   }
   
   slaw dslaw, islaw;
-  oret = PythonToSlaw (descrips, &dslaw);
-  PYTHON_OBCHECK (oret);
-  oret = PythonToSlaw (ingests, &islaw);
-  PYTHON_OBCHECK (oret);
+  ret = PythonToSlaw (descrips, &dslaw);
+  if (ret == NULL) { return ret; }
+  ret = PythonToSlaw (ingests, &islaw);
+  if (ret == NULL) { return ret; }
 
   p = protein_from (dslaw, islaw);
   
@@ -270,7 +269,7 @@ static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
   PYTHON_OBCHECK (oret);
 
   ret = PyTuple_New (2);
-  PyTuple_SET_ITEM (ret, 0, PyLong_FromLong (idx));
+  PyTuple_SET_ITEM (ret, 0, PyLong_FromLongLong (idx));
   PyTuple_SET_ITEM (ret, 1, PyFloat_FromDouble (timestamp));
 
   Py_INCREF (ret);
