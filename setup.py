@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import os.path
 import sys
 import distutils.core
 
@@ -16,13 +17,15 @@ support_dir = os.path.normpath
 (os.path.join
  (sys.prefix, 'share', 'python%d.%d' % (sys.version_info[0], sys.version_info[1]), 'CXX'))
 
+G_SPEAK_HOME = os.getenv ('G_SPEAK_HOME')
+
 plasma = distutils.core.Extension \
 ("libplasma",
  [ "plasma.c" ],
- include_dirs = [ '/opt/oblong/g-speak-32-2/include' ],
- library_dirs= [ '/opt/oblong/g-speak-32-2/lib' ],
+ include_dirs = [ os.path.join (G_SPEAK_HOME, 'include') ],
+ library_dirs= [ os.path.join (G_SPEAK_HOME, 'lib') ],
  libraries = [ "Plasma" ],
- extra_compile_args = [ '-Wall', '-g', '-O0', '-arch', 'i386' ]
+ extra_compile_args = [ '-Wall', '-g', '-O0' ]
  )
 
 distutils.core.setup \
