@@ -1,3 +1,5 @@
+#include <libPlasma/c/slaw-io.h>
+
 typedef struct {
   PyObject_HEAD
   slaw s;
@@ -13,18 +15,36 @@ static int SlawInit (SlawObject *self, PyObject *args, PyObject *keywords)
   }
   
   pret = PythonToSlaw (obj, &self->s);
-  if (pret == NULL) { return pret; }
+  if (pret == NULL) { return -1; }
 
   return 0;
 }
 
+static PyObject *SlawToPythonFunc (SlawObject *self)
+{
+  return SlawToPython (self->s);
+}
 
+static PyObject *SlawToStringFunc (SlawObject *self)
+{
+  ob_retort oret;
+  slaw s;
+
+  oret = slaw_to_string (self->s, &s);
+  PYTHON_OBCHECK (oret);
+
+  return SlawToPython (s);
+}
 
 static PyMemberDef SlawMembers[] = {
   { NULL }
 };
 
 static PyMethodDef SlawMethods[] = {
+  { "to_python", (PyCFunction) SlawToPythonFunc, METH_NOARGS,
+    "Convert to a raw python object." },
+  { "to_str", (PyCFunction) SlawToStringFunc, METH_NOARGS,
+    "Convert to a string." },
   { NULL }
 };
 
@@ -41,7 +61,7 @@ static PyTypeObject SlawObjectType = {
 	0,				/* tp_getattr        */
 	0,				/* tp_setattr        */
 	0,				/* tp_compare        */
-	SlawRepr,			/* tp_repr           */
+	0,				/* tp_repr           */
 	0,				/* tp_as_number      */
 	0,				/* tp_as_sequence    */
 	0,				/* tp_as_mapping     */

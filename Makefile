@@ -8,7 +8,8 @@ setup:
 	lipo /usr/bin/python -extract i386 -output ./python
 
 build:
-	ARCHFLAGS="-arch i386" python setup.py build
+	rm -rf build
+	G_SPEAK_HOME=/opt/oblong/g-speak-32-2 ARCHFLAGS="-arch i386" python setup.py build
 
 clean:
 	python setup.py clean
