@@ -6,6 +6,7 @@ import os.path
 icons = {
     "aircraft-civilian" : "Civilian Aircraft",
     "aircraft-military" : "Military Aircraft",
+    "boat" : "Boat"
     "cattle" : "Cattle",
     "church-catholic" : "Catholic Church",
     "church-goc" : "Orthodox Church",
@@ -31,23 +32,24 @@ icons = {
     "vehicle-lighttruck" : "Light Truck",
     "vehicle-18wheeler" : "18-Wheeler",
     "vehicle-auto" : "Automobile",
-    "vehicle-bus" : "Bus"
+    "vehicle-bus" : "Bus",
     }
 
 sources = {
-	  "53493251.tif" : ('aircraft-civilian', 'aircraft-military', 'cattle', 'church-catholic'),
-	  "03475442.tif" : ('church-goc', 'church-protestant', 'golfcourse', 'holysite-christian'),
-	  "04518946.tif" : ('holysite-islam', 'holysite-jewish', 'moonbase', 'mosque-islamic'),
-	  "58884183.tif" : ('parkingstructure', 'raceway-auto', 'raceway-equestrian', 'school-primary'),
-	  "05797421.tif" : ('school-university', 'stadium-baseball', 'stadium-football', 'stadium-soccer'),
-	  "46532678.tif" : ('station-police', 'station-radio', 'station-tv', 'temple-jewish'),
-	  "19051500.tif" : ('vehicle-lighttruck', 'vehicle-18wheeler', 'vehicle-auto' 'vehicle-bus'),
-	  "65117025.tif" : ('parkingstructure', 'raceway-auto', 'raceway-equestrian', 'school-primary'),
-	  "99905449.tif" : ('school-university', 'stadium-baseball', 'stadium-football', 'stadium-soccer'),
-	  "65638946.tif" : ('holysite-islam', 'holysite-jewish', 'moonbase', 'mosque-islamic'),
-	  "40202299.tif" : ('school-university', 'stadium-baseball', 'stadium-football', 'stadium-soccer'),
-	  "18464358.tif" : ('station-police', 'station-radio', 'station-tv', 'temple-jewish'),
-	  "61407638.tif" : ('vehicle-lighttruck', 'vehicle-18wheeler', 'vehicle-auto' 'vehicle-bus')
+	  "53493251.tif" : ('aircraft-military' , 'aircraft-civilian' , 'boat' , 'vehicle-18wheeler' , 'vehicle-auto' , 'vehicle-bus' , 'vehicle-lighttruck'),
+	  "03475442.tif" : ('school-university' , 'school-primary' , 'station-police'),
+	  "04518946.tif" : ('vehicle-auto' , 'boat'),
+	  "58884183.tif" : ('vehicle-18wheeler' , 'vehicle-bus'),
+	  "05797421.tif" : ('golfcourse' , 'raceway-equestrian' , 'raceway-auto' , 'stadium-soccer' , 'stadium-baseball' , 'stadium-football' , 'station-tv' , 'station-radio'),
+	  "46532678.tif" : ('golfcourse' , 'raceway-equestrian' , 'raceway-auto' , 'stadium-soccer' , 'stadium-baseball' , 'stadium-football'),
+	  "19051500.tif" : ('golfcourse' , 'raceway-equestrian' , 'raceway-auto' , 'stadium-soccer' , 'stadium-baseball' , 'stadium-football'),
+	  "65117025.tif" : ('golfcourse'),
+	  "99905449.tif" : ('cattle'),
+	  "65638946.tif" : ('boat'),
+	  "40202299.tif" : ('vehicle-lighttruck'),
+	  "18464358.tif" : ('vehicle-bus'),
+	  "61407638.tif" : ('church-protestant' , 'church-catholic' , 'church-goc' , 'mosque-islamic' , 'temple-jewish' , 'parkingstructure')
+	  "rome.tif" : ('vehicle-bus' , 'church-protestant' , 'church-goc' , 'church-catholic' , 'holysite-christian' , 'temple-jewish' , 'holysite-jewish' , 'mosque-islamic' ,'holysite-islam'),
 	  }
 
 f = libplasma.slaw ({ 'icons' : icons, 'sources' : sources })
