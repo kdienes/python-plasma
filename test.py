@@ -6,7 +6,7 @@ import os.path
 icons = {
     "aircraft-civilian" : "Civilian Aircraft",
     "aircraft-military" : "Military Aircraft",
-    "boat" : "Boat"
+    "boat" : "Boat",
     "cattle" : "Cattle",
     "church-catholic" : "Catholic Church",
     "church-goc" : "Orthodox Church",
@@ -49,7 +49,7 @@ sources = {
 	  "40202299.tif" : ('vehicle-lighttruck'),
 	  "18464358.tif" : ('vehicle-bus'),
 	  "61407638.tif" : ('church-protestant' , 'church-catholic' , 'church-goc' , 'mosque-islamic' , 'temple-jewish' , 'parkingstructure')
-	  "rome.tif" : ('vehicle-bus' , 'church-protestant' , 'church-goc' , 'church-catholic' , 'holysite-christian' , 'temple-jewish' , 'holysite-jewish' , 'mosque-islamic' ,'holysite-islam'),
+	  # "rome.tif" : ('vehicle-bus' , 'church-protestant' , 'church-goc' , 'church-catholic' , 'holysite-christian' , 'temple-jewish' , 'holysite-jewish' , 'mosque-islamic' ,'holysite-islam'),
 	  }
 
 f = libplasma.slaw ({ 'icons' : icons, 'sources' : sources })

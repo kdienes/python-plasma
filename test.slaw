@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !!omap
+- sources: !!omap
+  - 99905449.tif: cattle
+  - 19051500.tif:
+    - golfcourse
+    - raceway-equestrian
+    - raceway-auto
+    - stadium-soccer
+    - stadium-baseball
+    - stadium-football
+  - 53493251.tif:
+    - aircraft-military
+    - aircraft-civilian
+    - boat
+    - vehicle-18wheeler
+    - vehicle-auto
+    - vehicle-bus
+    - vehicle-lighttruck
+  - 03475442.tif:
+    - school-university
+    - school-primary
+    - station-police
+  - 65117025.tif: golfcourse
+  - 61407638.tif:
+    - church-protestant
+    - church-catholic
+    - church-goc
+    - mosque-islamic
+    - temple-jewish
+    - parkingstructure
+  - 05797421.tif:
+    - golfcourse
+    - raceway-equestrian
+    - raceway-auto
+    - stadium-soccer
+    - stadium-baseball
+    - stadium-football
+    - station-tv
+    - station-radio
+  - 04518946.tif:
+    - vehicle-auto
+    - boat
+  - 40202299.tif: vehicle-lighttruck
+  - 46532678.tif:
+    - golfcourse
+    - raceway-equestrian
+    - raceway-auto
+    - stadium-soccer
+    - stadium-baseball
+    - stadium-football
+  - 65638946.tif: boat
+  - 58884183.tif:
+    - vehicle-18wheeler
+    - vehicle-bus
+  - 18464358.tif: vehicle-bus
+- icons: !!omap
+  - aircraft-military: Military Aircraft
+  - vehicle-18wheeler: 18-Wheeler
+  - school-primary: Primary School
+  - vehicle-auto: Automobile
+  - church-catholic: Catholic Church
+  - vehicle-lighttruck: Light Truck
+  - cattle: Cattle
+  - raceway-auto: Auto Raceway
+  - golfcourse: Golf Course
+  - boat: Boat
+  - church-protestant: Protestant Church
+  - moonbase: Moon Base
+  - school-university: University
+  - station-tv: TV Station
+  - stadium-soccer: Soccer Stadium
+  - temple-jewish: Jewish Temple
+  - stadium-football: Football Stadium
+  - mosque-islamic: Mosque
+  - station-radio: Radio Station
+  - stadium-baseball: Baseball Stadium
+  - church-goc: Orthodox Church
+  - station-police: Police Station
+  - vehicle-bus: Bus
+  - holysite-islam: Islamic Holy Site
+  - holysite-christian: Christian Holy Site
+  - parkingstructure: Parking Structure
+  - holysite-jewish: Jewish Holy Site
+  - raceway-equestrian: Equestrian Raceway
+  - aircraft-civilian: Civilian Aircraft
+...
+
