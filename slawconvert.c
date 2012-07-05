@@ -60,6 +60,12 @@ static PyObject *SlawToPython (bslaw s)
     } else if (slaw_is_unt16 (s)) {
       unt16 v = *(slaw_unt16_emit (s));
       ret = PyLong_FromUnsignedLong (v);
+    } else if (slaw_is_float32 (s)) {
+      float32 v = *(slaw_float32_emit (s));
+      ret = PyFloat_FromDouble (v);
+    } else if (slaw_is_float64 (s)) {
+      float64 v = *(slaw_float64_emit (s));
+      ret = PyFloat_FromDouble (v);
     }  else {
       UNKNOWN_TYPE (s);
     }

@@ -6,12 +6,13 @@ import libplasma
 
 import os
 import os.path
+import string
 
 class mapserver:
 
     def __init__ (self):
 
-        self.requests = []
+        self.requests = {}
         self.npending = 0
         self.maxpending = 4
         self.loop = tornado.ioloop.IOLoop.instance ()
@@ -37,20 +38,67 @@ class mapserver:
             f = file (r.request.cache, 'w')
             f.write (r.body)
             f.close ()
+
+            del self.requests[r.request.url]
+
             print [['tile-response'], { 'id' : r.request.id }]
             self.hose.deposit (['tile-response'], { 'id' : r.request.id })
+
+    def tilekey (self, id):
+        s = ''
+        priority, lod, x, y = id
+        for n in range (lod, 0, -1):
+            mask = 1 << (n - 1)
+            if (y & mask):
+                if (x & mask):
+                    s = s + '3'
+                else:
+                    s = s + '2'
+            else:
+                if (x & mask):
+                    s = s + '1'
+                else:
+                    s = s + '0'
+        return s
+
+    def request_str (self, url, id):
+        s = url
+        s = string.replace (s, '%{lod}', str (int (id[1])))
+        s = string.replace (s, '%{x}', str (int (id[2])))
+        s = string.replace (s, '%{y}', str (int (id[3])))
+        s = string.replace (s, '%{tilekey}', self.tilekey (id))
+        return s
 
     def handle_protein (self, p):
 
         descrips, ingests = p
-        if not 'tile-request' in descrips:
+        if not 'tiles-request' in descrips:
             return
 
-        print p
-        r = tornado.httpclient.HTTPRequest (url = ingests['url'])
-        r.cache = ingests['cache']
-        r.id = ingests['id']
-        self.requests.insert (0, r)
+        for source in ingests:
+            for id in source['tiles']:
+
+                if (len (self.requests) >= self.maxpending):
+                    return
+
+                url = self.request_str (source['url'], id)
+                if (self.requests.has_key (url)):
+                    continue
+
+                cdir = source['url'].replace ('/', '|')
+                cache = '../cache/%s/%d-%d-%d.%s' % (cdir, id[1], id[2], id[3], source['filetype'])
+
+                if os.path.isfile (cache):
+                    continue
+
+                r = tornado.httpclient.HTTPRequest (url = url)
+                r.id = id
+                r.url = url
+                r.cache = cache
+                self.requests[r.url] = r
+                self.client.fetch (r, self.handle_request)
+
+                print r.url
 
     def handle_pool (self):
 
@@ -61,13 +109,7 @@ class mapserver:
             self.handle_protein (r)
 
     def make_requests (self):
-
-        while self.npending < self.maxpending:
-            if (len (self.requests) == 0):
-                return
-            self.npending += 1
-            r = self.requests.pop (0)
-            self.client.fetch (r, self.handle_request)
+        pass
 
 server = mapserver ()
 server.loop.start ()
