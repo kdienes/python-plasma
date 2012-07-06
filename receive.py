@@ -27,9 +27,10 @@ class mapserver:
 
     def handle_request (self, r):
 
-        self.npending -= 1
-        if r.error:
-            print "Error:", r.error
+        if r.error or (r.body[0] != '\xff') or (r.body[1] != '\xd8'):
+
+            response = None
+
         else:
             try:
                 os.mkdir (os.path.dirname (r.request.cache))
@@ -39,10 +40,14 @@ class mapserver:
             f.write (r.body)
             f.close ()
 
-            del self.requests[r.request.url]
+            response = (['tile-response'], { 'id' : r.request.id })
+            
+        del self.requests[r.request.url]
+        self.npending -= 1
 
-            print [['tile-response'], { 'id' : r.request.id }]
-            self.hose.deposit (['tile-response'], { 'id' : r.request.id })
+        if response:
+            print response
+            self.hose.deposit (response[0], response[1])
 
     def tilekey (self, id):
         s = ''
