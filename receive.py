@@ -25,9 +25,17 @@ class mapserver:
         self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 100, io_loop = self.loop)
         self.rscheduler.start ()
 
+    def check_filetype (self, r):
+        if (r.request.filetype == 'jpeg'):
+            return (r.body[0:2] == '\xff\xd8')
+        elif (r.request.filetype == 'png'):
+            return (r.body[0:8] == '\x89\x50\x4e\x47\x0d\x0a\x1a\x0a')
+        else:
+            raise ValueError, 'unknown filetype'
+
     def handle_request (self, r):
 
-        if r.error or (r.body[0] != '\xff') or (r.body[1] != '\xd8'):
+        if r.error or not self.check_filetype (r):
 
             response = None
 
@@ -100,6 +108,7 @@ class mapserver:
                 r.id = id
                 r.url = url
                 r.cache = cache
+                r.filetype = source['filetype']
                 self.requests[r.url] = r
                 self.client.fetch (r, self.handle_request)
 
