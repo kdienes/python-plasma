@@ -101,6 +101,10 @@ static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
 
     s = slaw_int32 (PyLong_AsLong (p));
 
+  } else if (PyFloat_Check (p)) {
+
+    s = slaw_float64 (PyFloat_AsDouble (p));
+
   } else if (PyString_Check (p)) {
 
     s = slaw_string (PyString_AsString (p));
