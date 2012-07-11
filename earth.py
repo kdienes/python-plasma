@@ -30,7 +30,7 @@ class ViewClient:
             return
         return ingests
 
-e = GoogleEarthConnection ('192.168.1.86', 21567)
+e = GoogleEarthConnection ('192.168.42.32', 21567)
 c = ViewClient ()
 
 i = time.time ()
