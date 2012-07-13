@@ -29,5 +29,6 @@ c = ViewClient ()
 i = iPadConnection ()
 
 while True:
+    time.sleep (0.01)
     d = c.wait ()
     i.set (d['lng'], d['lat'], d['altitude'])
