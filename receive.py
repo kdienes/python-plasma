@@ -7,25 +7,36 @@ import libplasma
 import os
 import os.path
 import string
+import math
+
+import WebMercator
+import TileSource
+
+esriSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
+bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
 
 class mapserver:
 
     def __init__ (self):
+
+        self._center = None
 
         self.requests = {}
         self.npending = 0
         self.maxpending = 4
         self.loop = tornado.ioloop.IOLoop.instance ()
         self.client = tornado.httpclient.AsyncHTTPClient ()
-        self.hose = libplasma.hose ('tile-server');
+        self.hose = libplasma.hose ('tile-server')
+        self.view = libplasma.hose ('map-view')
 
-        self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_pool, 100, io_loop = self.loop)
+        self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_view, 20, io_loop = self.loop)
         self.scheduler.start ()
 
         self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 100, io_loop = self.loop)
         self.rscheduler.start ()
 
     def check_filetype (self, r):
+
         if (r.request.filetype == 'jpeg'):
             return (r.body[0:2] == '\xff\xd8')
         elif (r.request.filetype == 'png'):
@@ -55,75 +66,64 @@ class mapserver:
 
         if response:
             print response
-            self.hose.deposit (response[0], response[1])
+            # self.hose.deposit (response[0], response[1])
 
-    def tilekey (self, id):
-        s = ''
-        priority, lod, x, y = id
-        for n in range (lod, 0, -1):
-            mask = 1 << (n - 1)
-            if (y & mask):
-                if (x & mask):
-                    s = s + '3'
-                else:
-                    s = s + '2'
-            else:
-                if (x & mask):
-                    s = s + '1'
-                else:
-                    s = s + '0'
-        return s
 
-    def request_str (self, url, id):
-        s = url
-        s = string.replace (s, '%{lod}', str (int (id[1])))
-        s = string.replace (s, '%{x}', str (int (id[2])))
-        s = string.replace (s, '%{y}', str (int (id[3])))
-        s = string.replace (s, '%{tilekey}', self.tilekey (id))
-        return s
+    def cache_for (self, s, c):
+        
+        cdir = s._url.replace ('/', '|')
+        return '../cache/%s/%d-%d-%d.%s' % (cdir, c.lod, c.x, c.y, s._format)
+        
+    def make_requests (self):
 
-    def handle_protein (self, p):
-
-        descrips, ingests = p
-        if not 'tiles-request' in descrips:
+        if not self._center:
             return
 
-        for source in ingests:
-            for id in source['tiles']:
+        s = bingSource
 
-                if (len (self.requests) >= self.maxpending):
-                    return
+        for c in s.tiles_for (self._center, self._lod):
 
-                url = self.request_str (source['url'], id)
-                if (self.requests.has_key (url)):
-                    continue
+            c = c.at_lod (self._lod)
 
-                cdir = source['url'].replace ('/', '|')
-                cache = '../cache/%s/%d-%d-%d.%s' % (cdir, id[1], id[2], id[3], source['filetype'])
+            if (len (self.requests) >= self.maxpending):
+                return
 
-                if os.path.isfile (cache):
-                    continue
+            url = s.request_str (c)
+            if (self.requests.has_key (url)):
+                continue
 
-                r = tornado.httpclient.HTTPRequest (url = url)
-                r.id = id
-                r.url = url
-                r.cache = cache
-                r.filetype = source['filetype']
-                self.requests[r.url] = r
-                self.client.fetch (r, self.handle_request)
+            cache = self.cache_for (s, c)
+            if os.path.isfile (cache):
+                continue
 
-                print r.url
+            r = tornado.httpclient.HTTPRequest (url = url)
+            r.id = id
+            r.url = url
+            r.cache = cache
+            r.filetype = s._format
+            self.requests[r.url] = r
+            self.client.fetch (r, self.handle_request)
 
-    def handle_pool (self):
+            print r.url
 
+    def select_lod (self, scale):
+
+        EarthMajorAxis = 6378137.0
+        flod = math.log (2 * math.pi * EarthMajorAxis / scale, 2) - math.log (256.0, 2);
+        flod -= 1.0;
+        flod += 1.6;
+        if (flod < 0):
+            flod = 0;
+        return int (flod);
+
+    def handle_view (self):
         while True:
-            r = self.hose.fetch (0)
+            r = self.view.fetch (0)
             if not r:
                 return
-            self.handle_protein (r)
-
-    def make_requests (self):
-        pass
+            descrips, ingests = r
+            self._lod = self.select_lod (ingests['altitude'])
+            self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
 
 server = mapserver ()
 server.loop.start ()
