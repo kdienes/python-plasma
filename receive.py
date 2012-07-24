@@ -32,7 +32,7 @@ class mapserver:
         self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_view, 20, io_loop = self.loop)
         self.scheduler.start ()
 
-        self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 100, io_loop = self.loop)
+        self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 10, io_loop = self.loop)
         self.rscheduler.start ()
 
     def check_filetype (self, r):
@@ -51,10 +51,9 @@ class mapserver:
             response = None
 
         else:
-            try:
-                os.mkdir (os.path.dirname (r.request.cache))
-            except:
-                pass
+
+            if not os.path.exists (os.path.dirname (r.request.cache)):
+                os.makedirs (os.path.dirname (r.request.cache))
             f = file (r.request.cache, 'w')
             f.write (r.body)
             f.close ()
@@ -70,9 +69,16 @@ class mapserver:
 
 
     def cache_for (self, s, c):
-        
+    
+        filepart = '%02d/%03d/%03d/%03d/%03d/%03d/%03d.%s' % \
+        (c.lod,
+         int (c.x / 1000000), int (c.x / 1000) % 1000, int (c.x) % 1000,
+         int (c.y / 1000000), int (c.y / 1000) % 1000, int (c.y) % 1000,  
+         s._format)
+
         cdir = s._url.replace ('/', '|')
-        return '../cache/%s/%d-%d-%d.%s' % (cdir, c.lod, c.x, c.y, s._format)
+
+        return '/Library/Caches/oblong/tile-cache/%s/%s' % (cdir, filepart)
         
     def make_requests (self):
 
@@ -80,31 +86,32 @@ class mapserver:
             return
 
         s = bingSource
+        
+        if (len (self.requests) >= self.maxpending):
+            return
 
-        for c in s.tiles_for (self._center, self._lod):
+        try:
+            c = self._iter.next ()
+        except StopIteration:
+            return
 
-            c = c.at_lod (self._lod)
+        url = s.request_str (c)
+        if (self.requests.has_key (url)):
+            return
 
-            if (len (self.requests) >= self.maxpending):
-                return
+        cache = self.cache_for (s, c)
+        if os.path.isfile (cache):
+            return
 
-            url = s.request_str (c)
-            if (self.requests.has_key (url)):
-                continue
+        r = tornado.httpclient.HTTPRequest (url = url)
+        r.id = id
+        r.url = url
+        r.cache = cache
+        r.filetype = s._format
+        self.requests[r.url] = r
+        self.client.fetch (r, self.handle_request)
 
-            cache = self.cache_for (s, c)
-            if os.path.isfile (cache):
-                continue
-
-            r = tornado.httpclient.HTTPRequest (url = url)
-            r.id = id
-            r.url = url
-            r.cache = cache
-            r.filetype = s._format
-            self.requests[r.url] = r
-            self.client.fetch (r, self.handle_request)
-
-            print r.url
+        print r.url
 
     def select_lod (self, scale):
 
@@ -124,6 +131,7 @@ class mapserver:
             descrips, ingests = r
             self._lod = self.select_lod (ingests['altitude'])
             self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
+            self._iter = bingSource.tiles_for (self._center, self._lod)
 
 server = mapserver ()
 server.loop.start ()
