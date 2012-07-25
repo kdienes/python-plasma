@@ -19,6 +19,12 @@ bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/
 
 sources = [ faaSource, roadsSource, esriSource, bingSource ]
 
+class NullIterator ():
+    def __init__ (self):
+        pass
+    def next (self):
+        raise StopIteration
+
 class mapserver:
 
     def __init__ (self):
@@ -33,6 +39,9 @@ class mapserver:
         self.hose = libplasma.hose ('tile-server')
         self.view = libplasma.hose ('map-view')
         self.nga = libplasma.hose ('nga-server')
+
+        self._sourceList = []
+        self.update_iterator ()
 
         # self.nscheduler = tornado.ioloop.PeriodicCallback (self.handle_nga, 20, io_loop = self.loop)
         # self.nscheduler.start ()
@@ -138,9 +147,12 @@ class mapserver:
         return int (flod);
 
     def update_iterator (self):
-        s = self._sourceList[0]
-        source = TileSource.TileSource (s[0], s[1], s[2], s[3])
-        self._iter = source.tiles_for (self._center, self._lod)
+        if len (self._sourceList) > 0:
+            s = self._sourceList[0]
+            source = TileSource.TileSource (s[0], s[1], s[2], s[3])
+            self._iter = source.tiles_for (self._center, self._lod)
+        else:
+            self._iter = NullIterator ()
 
     def handle_view (self):
         while True:
