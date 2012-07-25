@@ -38,7 +38,7 @@ class TileSource:
         c = base
 
         while True:
-            yield c
+            yield self, c
             if c.lod == self._min:
                 break
             c = c.at_lod (c.lod - 1)

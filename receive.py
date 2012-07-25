@@ -12,8 +12,12 @@ import math
 import WebMercator
 import TileSource
 
+faaSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
+roadsSource = TileSource.TileSource ("http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
 esriSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
 bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
+
+sources = [ faaSource, roadsSource, esriSource, bingSource ]
 
 class mapserver:
 
@@ -28,12 +32,24 @@ class mapserver:
         self.client = tornado.httpclient.AsyncHTTPClient ()
         self.hose = libplasma.hose ('tile-server')
         self.view = libplasma.hose ('map-view')
+        self.nga = libplasma.hose ('nga-server')
+
+        # self.nscheduler = tornado.ioloop.PeriodicCallback (self.handle_nga, 20, io_loop = self.loop)
+        # self.nscheduler.start ()
 
         self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_view, 20, io_loop = self.loop)
         self.scheduler.start ()
 
         self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 10, io_loop = self.loop)
         self.rscheduler.start ()
+
+    def handle_nga (self):
+
+        r = self.view.fetch (0)
+        if not r:
+            return
+        descrips, ingests = r
+        print descrips, ingests
 
     def check_filetype (self, r):
 
@@ -121,15 +137,28 @@ class mapserver:
             flod = 0;
         return int (flod);
 
+    def update_iterator (self):
+        s = self._sourceList[0]
+        source = TileSource.TileSource (s[0], s[1], s[2], s[3])
+        self._iter = source.tiles_for (self._center, self._lod)
+
     def handle_view (self):
         while True:
             r = self.view.fetch (0)
+
             if not r:
                 return
             descrips, ingests = r
-            self._lod = self.select_lod (ingests['altitude'])
-            self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
-            self._iter = esriSource.tiles_for (self._center, self._lod)
+            
+            if descrips[0] == 'current-view':
+                self._lod = self.select_lod (ingests['altitude'])
+                self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
+                self.update_iterator ()
+            elif descrips[0] == 'current-layers':
+                self._sourceList = ingests
+                self.update_iterator ()
+            else:
+                raise ValueError
 
 server = mapserver ()
 server.loop.start ()

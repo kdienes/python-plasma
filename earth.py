@@ -30,13 +30,17 @@ class ViewClient:
             return
         return ingests
 
-e = GoogleEarthConnection ('192.168.42.32', 21567)
+e = GoogleEarthConnection ('172.16.6.121', 49490)
 c = ViewClient ()
 
 i = time.time ()
 
 lng = -71.091652
 lat = 42.358609
+
+e.send_packet (counter = i, lat = lat, long = lng, altitude = 20000.0)
+
+raise ValueError
 
 while True:
     d = c.wait ()
