@@ -85,13 +85,11 @@ class mapserver:
         if not self._center:
             return
 
-        s = bingSource
-        
         if (len (self.requests) >= self.maxpending):
             return
 
         try:
-            c = self._iter.next ()
+            s, c = self._iter.next ()
         except StopIteration:
             return
 
@@ -131,7 +129,7 @@ class mapserver:
             descrips, ingests = r
             self._lod = self.select_lod (ingests['altitude'])
             self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
-            self._iter = bingSource.tiles_for (self._center, self._lod)
+            self._iter = esriSource.tiles_for (self._center, self._lod)
 
 server = mapserver ()
 server.loop.start ()

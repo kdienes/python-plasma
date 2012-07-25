@@ -49,7 +49,7 @@ class TileSource:
             c = c.at_lod (lod)
 
             while True:
-                yield c
+                yield self, c
                 if (c.x % 2 != 0) or (c.y % 2 != 0):
                     break
                 c = c.at_lod (c.lod - 1)
