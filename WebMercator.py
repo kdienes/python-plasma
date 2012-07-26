@@ -10,6 +10,8 @@ class WebMercatorCoordinate:
     def __str__ (self):
         return "[%d %s @%d]" % (self.x, self.y, self.lod)
 
+    def __repr__ (self):
+        return "WebMercatorCoordinate (%d, %d, %d)" % (self.x, self.y, self.lod)
 
     def at_lod (self, nlod):
         if (nlod > self.lod):

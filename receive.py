@@ -11,6 +11,7 @@ import math
 
 import WebMercator
 import TileSource
+import TileManager
 
 faaSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
 roadsSource = TileSource.TileSource ("http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
@@ -36,29 +37,18 @@ class mapserver:
         self.maxpending = 4
         self.loop = tornado.ioloop.IOLoop.instance ()
         self.client = tornado.httpclient.AsyncHTTPClient ()
-        self.hose = libplasma.hose ('tile-server')
-        self.view = libplasma.hose ('map-view')
-        self.nga = libplasma.hose ('nga-server')
+        self.view = libplasma.hose ('nga-server')
+        self.manager = TileManager.TileManager ()
 
         self._sourceList = []
+        self._altitude = None
         self.update_iterator ()
-
-        # self.nscheduler = tornado.ioloop.PeriodicCallback (self.handle_nga, 20, io_loop = self.loop)
-        # self.nscheduler.start ()
 
         self.scheduler = tornado.ioloop.PeriodicCallback (self.handle_view, 20, io_loop = self.loop)
         self.scheduler.start ()
 
         self.rscheduler = tornado.ioloop.PeriodicCallback (self.make_requests, 10, io_loop = self.loop)
         self.rscheduler.start ()
-
-    def handle_nga (self):
-
-        r = self.view.fetch (0)
-        if not r:
-            return
-        descrips, ingests = r
-        print descrips, ingests
 
     def check_filetype (self, r):
 
@@ -71,8 +61,10 @@ class mapserver:
 
     def handle_request (self, r):
 
-        if r.error or not self.check_filetype (r):
+        if r.error:
+            pass
 
+        elif not self.check_filetype (r):
             response = None
 
         else:
@@ -90,7 +82,6 @@ class mapserver:
 
         if response:
             print response
-            # self.hose.deposit (response[0], response[1])
 
 
     def cache_for (self, s, c):
@@ -107,70 +98,71 @@ class mapserver:
         
     def make_requests (self):
 
-        if not self._center:
-            return
+        while True:
 
-        if (len (self.requests) >= self.maxpending):
-            return
+            if (len (self.requests) >= self.maxpending):
+                return
 
-        try:
-            s, c = self._iter.next ()
-        except StopIteration:
-            return
+            try:
+                s, c = self._iter.next ()
+            except StopIteration:
+                return
 
-        url = s.request_str (c)
-        if (self.requests.has_key (url)):
-            return
+            url = s.request_str (c)
+            if (self.requests.has_key (url)):
+                return
 
-        cache = self.cache_for (s, c)
-        if os.path.isfile (cache):
-            return
+            cache = self.cache_for (s, c)
+            if os.path.isfile (cache):
+                return
 
-        r = tornado.httpclient.HTTPRequest (url = url)
-        r.id = id
-        r.url = url
-        r.cache = cache
-        r.filetype = s._format
-        self.requests[r.url] = r
-        self.client.fetch (r, self.handle_request)
-
-        print r.url
-
-    def select_lod (self, scale):
-
-        EarthMajorAxis = 6378137.0
-        flod = math.log (2 * math.pi * EarthMajorAxis / scale, 2) - math.log (256.0, 2);
-        flod -= 1.0;
-        flod += 1.6;
-        if (flod < 0):
-            flod = 0;
-        return int (flod);
+            r = tornado.httpclient.HTTPRequest (url = url)
+            r.id = id
+            r.url = url
+            r.cache = cache
+            r.filetype = s._format
+            self.requests[r.url] = r
+            self.client.fetch (r, self.handle_request)
 
     def update_iterator (self):
-        if len (self._sourceList) > 0:
-            s = self._sourceList[0]
-            source = TileSource.TileSource (s[0], s[1], s[2], s[3])
-            self._iter = source.tiles_for (self._center, self._lod)
-        else:
+
+        if (len (self._sourceList) == 0) or (self._altitude is None):
             self._iter = NullIterator ()
+            return
+
+        s = self._sourceList[0]
+        source = TileSource.TileSource (s[0], s[1], s[2], s[3])
+        lod = source.select_lod (self._altitude)
+        self._iter = self.manager.TileIDsFor (source, self._region, lod)
 
     def handle_view (self):
-        while True:
-            r = self.view.fetch (0)
 
+        while True:
+
+            r = self.view.fetch (0)
             if not r:
                 return
+
             descrips, ingests = r
             
             if descrips[0] == 'current-view':
-                self._lod = self.select_lod (ingests['altitude'])
-                self._center = WebMercator.FromLatLng (ingests['lat'], ingests['lng'])
+                self._altitude = ingests['altitude']
+                self._region = {
+                    'll' : WebMercator.FromLatLng (ingests['ll'][0], ingests['ll'][1]),
+                    'ul' : WebMercator.FromLatLng (ingests['ul'][0], ingests['ul'][1]),
+                    'lr' : WebMercator.FromLatLng (ingests['lr'][0], ingests['lr'][1]),
+                    'ur' : WebMercator.FromLatLng (ingests['ur'][0], ingests['ur'][1]),
+                    'center' : WebMercator.FromLatLng (ingests['center'][0], ingests['center'][1])
+                    }
                 self.update_iterator ()
             elif descrips[0] == 'current-layers':
                 self._sourceList = ingests
                 self.update_iterator ()
+            elif descrips[0] == 'synchronize':
+                pass
             else:
                 raise ValueError
 
 server = mapserver ()
+server.view.deposit (['synchronize'], [])
 server.loop.start ()
