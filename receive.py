@@ -110,11 +110,11 @@ class mapserver:
 
             url = s.request_str (c)
             if (self.requests.has_key (url)):
-                return
+                continue
 
             cache = self.cache_for (s, c)
             if os.path.isfile (cache):
-                return
+                continue
 
             r = tornado.httpclient.HTTPRequest (url = url)
             r.id = id
@@ -137,31 +137,41 @@ class mapserver:
 
     def handle_view (self):
 
+        nview = None
+        nlayers = None
+
         while True:
 
             r = self.view.fetch (0)
             if not r:
-                return
-
+                break
             descrips, ingests = r
             
             if descrips[0] == 'current-view':
-                self._altitude = ingests['altitude']
-                self._region = {
-                    'll' : WebMercator.FromLatLng (ingests['ll'][0], ingests['ll'][1]),
-                    'ul' : WebMercator.FromLatLng (ingests['ul'][0], ingests['ul'][1]),
-                    'lr' : WebMercator.FromLatLng (ingests['lr'][0], ingests['lr'][1]),
-                    'ur' : WebMercator.FromLatLng (ingests['ur'][0], ingests['ur'][1]),
-                    'center' : WebMercator.FromLatLng (ingests['center'][0], ingests['center'][1])
-                    }
-                self.update_iterator ()
+                nview = ingests
             elif descrips[0] == 'current-layers':
-                self._sourceList = ingests
-                self.update_iterator ()
+                nlayers = ingests
             elif descrips[0] == 'synchronize':
                 pass
             else:
-                raise ValueError
+                raise ValueError, r
+
+        if nlayers is not None:
+            self._sourceList = nlayers
+
+        if nview is not None:
+            self._altitude = nview['altitude']
+            self._region = {
+                'll' : WebMercator.FromLatLng (nview['ll'][0], nview['ll'][1]),
+                'ul' : WebMercator.FromLatLng (nview['ul'][0], nview['ul'][1]),
+                'lr' : WebMercator.FromLatLng (nview['lr'][0], nview['lr'][1]),
+                'ur' : WebMercator.FromLatLng (nview['ur'][0], nview['ur'][1]),
+                'center' : WebMercator.FromLatLng (nview['center'][0], nview['center'][1])
+                }
+
+        if nview or nlayers:
+            self.update_iterator ()
+
 
 server = mapserver ()
 server.view.deposit (['synchronize'], [])
