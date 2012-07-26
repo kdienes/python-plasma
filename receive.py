@@ -62,7 +62,8 @@ class mapserver:
     def handle_request (self, r):
 
         if r.error:
-            pass
+            print "Error ",r.error
+            response = None
 
         elif not self.check_filetype (r):
             response = None
