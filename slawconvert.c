@@ -36,11 +36,9 @@ static PyObject *SlawToPython (bslaw s)
 
   } else if (slaw_is_cons (s)) {
 
-    int64 count = slaw_list_count (s);
-    assert (count < 1024);
-    ret = PyTuple_New ((int) count);
-
-    UNKNOWN_TYPE (s);
+    ret = PyTuple_New (2);
+    PyTuple_SET_ITEM (ret, 0, SlawToPython (slaw_cons_emit_car (s)));
+    PyTuple_SET_ITEM (ret, 1, SlawToPython (slaw_cons_emit_cdr (s)));
 
   } else if (slaw_is_string (s)) {
 
