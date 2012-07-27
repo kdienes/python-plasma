@@ -13,12 +13,13 @@ import WebMercator
 import TileSource
 import TileManager
 
-faaSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
-roadsSource = TileSource.TileSource ("http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
-esriSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
-bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
+if False:
+    faaSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
+    roadsSource = TileSource.TileSource ("http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
+    esriSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
+    bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
 
-sources = [ faaSource, roadsSource, esriSource, bingSource ]
+    sources = [ faaSource, roadsSource, esriSource, bingSource ]
 
 class NullIterator ():
     def __init__ (self):
@@ -37,7 +38,7 @@ class mapserver:
         self.maxpending = 4
         self.loop = tornado.ioloop.IOLoop.instance ()
         self.client = tornado.httpclient.AsyncHTTPClient ()
-        self.view = libplasma.hose ('nga-server')
+        self.view = libplasma.hose ('tcp://localhost/nga-server')
         self.manager = TileManager.TileManager ()
 
         self._sourceList = []
@@ -76,13 +77,14 @@ class mapserver:
             f.write (r.body)
             f.close ()
 
-            response = (['tile-response'], { 'id' : r.request.id })
+            response = (['tile-loaded'], r.request.id)
             
         del self.requests[r.request.url]
         self.npending -= 1
 
         if response:
             print response
+            self.view.deposit (response[0], response[1])
 
 
     def cache_for (self, s, c):
@@ -118,7 +120,7 @@ class mapserver:
                 continue
 
             r = tornado.httpclient.HTTPRequest (url = url)
-            r.id = id
+            r.id = [ s._id, c.lod, c.x, c.y ]
             r.url = url
             r.cache = cache
             r.filetype = s._format
@@ -132,7 +134,7 @@ class mapserver:
             return
 
         s = self._sourceList[0]
-        source = TileSource.TileSource (s[0], s[1], s[2], s[3])
+        source = TileSource.TileSource (s[0], s[1], s[2], s[3], s[4])
         lod = source.select_lod (self._altitude)
         self._iter = self.manager.TileIDsFor (source, self._region, lod)
 
@@ -152,6 +154,8 @@ class mapserver:
                 nview = ingests
             elif descrips[0] == 'current-layers':
                 nlayers = ingests
+            elif descrips[0] == 'tile-loaded':
+                pass
             elif descrips[0] == 'synchronize':
                 pass
             else:
@@ -175,5 +179,5 @@ class mapserver:
 
 
 server = mapserver ()
-server.view.deposit (['synchronize'], [])
+server.view.deposit (['synchronize'])
 server.loop.start ()

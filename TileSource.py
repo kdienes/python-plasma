@@ -5,8 +5,9 @@ import string
 
 class TileSource:
 
-    def __init__ (self, url, format, min, max):
+    def __init__ (self, id, url, format, min, max):
 
+        self._id = id
         self._url = url
         self._format = format
         self._min = min
@@ -14,7 +15,7 @@ class TileSource:
 
     def __repr__ (self):
         
-        return 'TileSource ("%s", "%s", %d, %d)' % (self._url, self._format, self._min, self._max)
+        return 'TileSource (%d, "%s", "%s", %d, %d)' % (self._id, self._url, self._format, self._min, self._max)
 
     def select_lod (self, scale):
 
