@@ -39,3 +39,6 @@ class TileSource:
     def TileIDForCoordinate (self, c, lod):
         c = c.at_lod (lod)
         return c
+
+    def MaxTile (self, lod):
+        return WebMercator.WebMercatorCoordinate ((1 << lod) - 1, (1 << lod) - 1, lod)

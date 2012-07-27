@@ -136,7 +136,7 @@ class mapserver:
         s = self._sourceList[0]
         source = TileSource.TileSource (s[0], s[1], s[2], s[3], s[4])
         lod = source.select_lod (self._altitude)
-        self._iter = self.manager.TileIDsFor (source, self._region, lod)
+        self._iter = self.manager.TileIDsFor (source, self._region, lod, 4)
 
     def handle_view (self):
 
@@ -179,5 +179,5 @@ class mapserver:
 
 
 server = mapserver ()
-server.view.deposit (['synchronize'])
+server.view.deposit (['synchronize'], [])
 server.loop.start ()
