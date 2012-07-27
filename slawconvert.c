@@ -95,9 +95,13 @@ static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
   PyObject *pret = NULL;
   slaw s;
 
-  if (PyLong_Check (p)) {
+  if (PyInt_Check (p)) {
 
     s = slaw_int32 (PyLong_AsLong (p));
+
+  } else if (PyLong_Check (p)) {
+
+    s = slaw_int32 (PyInt_AsLong (p));
 
   } else if (PyFloat_Check (p)) {
 
