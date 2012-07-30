@@ -2,7 +2,11 @@ static PyObject *SlawToPython (bslaw s)
 {
   PyObject *ret = NULL;
 
-  if (slaw_is_map (s)) {
+  if (s == NULL) {
+
+    ret = Py_None;
+    
+  } else if (slaw_is_map (s)) {
 
     int64 count = slaw_map_count (s);
     int64 i = 0;
@@ -78,12 +82,7 @@ static PyObject *SlawToPython (bslaw s)
  
   } else {
 
-    printf ("*** UNKNOWN TYPE\n");
-    slaw_spew_overview (s, stdout, "");
-    printf ("\n");
-    printf ("*** END UNKNOWN TYPE\n");
-    fflush (stdout);
-    ret = Py_None;
+    UNKNOWN_TYPE (s);
   }
 
   Py_INCREF (ret);
