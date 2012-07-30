@@ -13,10 +13,6 @@ else:
 if sys.platform != "win32":
     compiler = [ '-Wall -Werror -fpermissive -Wno-strict-prototypes' ]
 
-support_dir = os.path.normpath 
-(os.path.join
- (sys.prefix, 'share', 'python%d.%d' % (sys.version_info[0], sys.version_info[1]), 'CXX'))
-
 G_SPEAK_HOME = os.getenv ('G_SPEAK_HOME')
 
 plasma = distutils.core.Extension \
