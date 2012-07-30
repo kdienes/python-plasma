@@ -13,19 +13,26 @@ import WebMercator
 import TileSource
 import TileManager
 
-if False:
-    faaSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
-    roadsSource = TileSource.TileSource ("http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
-    esriSource = TileSource.TileSource ("http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
-    bingSource = TileSource.TileSource ("http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
+faaSource = TileSource.TileSource (1, "http://www.aeromaps.us/Z%{lod}/%{y}/%{x}.png", "png", 5, 12)
+roadsSource = TileSource.TileSource (2, "http://a3.acetate.geoiq.com/tiles/acetate-roads/%{lod}/%{x}/%{y}.png", "png", 0, 23)
+esriSource = TileSource.TileSource (3, "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/%{lod}/%{y}/%{x}.jpeg", "jpeg", 0, 19)
+bingSource = TileSource.TileSource (4, "http://ecn.t0.tiles.virtualearth.net/tiles/a%{tilekey}.jpeg?g=926&mkt=en-US&shading=hill&stl=H", "jpeg", 1, 22)
 
-    sources = [ faaSource, roadsSource, esriSource, bingSource ]
+sources = { s._id : s for s in [ faaSource, roadsSource, esriSource, bingSource ] }
 
-class NullIterator ():
-    def __init__ (self):
-        pass
-    def next (self):
-        raise StopIteration
+layers = { s._id : {
+        'id' : s._id,
+        'url' : s._url,
+        'format' : s._format,
+        'min-lod' : s._min,
+        'max-lod' : s._max 
+        } for k, s in sources.items () }
+
+scenes = [ 
+    { 'name' : 'ESRI Baselayer', 'layers' : [ 3 ] },
+    { 'name' : 'Bing Baselayer', 'layers' : [ 4 ] },
+    { 'name' : 'Bing Baselayer with Roads', 'layers' : [ 4, 2 ] },
+    ]
 
 class mapserver:
 
@@ -127,16 +134,19 @@ class mapserver:
             self.requests[r.url] = r
             self.client.fetch (r, self.handle_request)
 
+    def send_layers (self):
+        
+        self.view.deposit ([ 'available-layers' ], { 'layers' : layers, 'scenes' : scenes })
+
     def update_iterator (self):
 
         if (len (self._sourceList) == 0) or (self._altitude is None):
-            self._iter = NullIterator ()
+            self._iter = TileManager.NullIterator ()
             return
 
         s = self._sourceList[0]
-        source = TileSource.TileSource (s[0], s[1], s[2], s[3], s[4])
-        lod = source.select_lod (self._altitude)
-        self._iter = self.manager.TileIDsFor (source, self._region, lod, 4)
+        lod = s.select_lod (self._altitude)
+        self._iter = self.manager.TileIDsFor (s, self._region, lod, 4)
 
     def handle_view (self):
 
@@ -154,15 +164,17 @@ class mapserver:
                 nview = ingests
             elif descrips[0] == 'current-layers':
                 nlayers = ingests
+            elif descrips[0] == 'available-layers':
+                pass
             elif descrips[0] == 'tile-loaded':
                 pass
             elif descrips[0] == 'synchronize':
-                pass
+                self.send_layers ()
             else:
                 raise ValueError, r
 
         if nlayers is not None:
-            self._sourceList = nlayers
+            self._sourceList = [ sources[n] for n in nlayers ]
 
         if nview is not None:
             self._altitude = nview['altitude']
@@ -179,5 +191,7 @@ class mapserver:
 
 
 server = mapserver ()
-server.view.deposit (['synchronize'], [])
+
+server.send_layers ()
+# server.view.deposit (['synchronize'], [])
 server.loop.start ()

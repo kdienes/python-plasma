@@ -1,5 +1,11 @@
 import WebMercator
 
+class NullIterator ():
+    def __init__ (self):
+        pass
+    def next (self):
+        raise StopIteration
+
 class TileManager:
     
     def __init__ (self):
