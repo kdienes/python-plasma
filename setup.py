@@ -20,8 +20,8 @@ plasma = distutils.core.Extension \
  [ "plasma.c" ],
  include_dirs = [ os.path.join (G_SPEAK_HOME, 'include') ],
  library_dirs= [ os.path.join (G_SPEAK_HOME, 'lib') ],
- libraries = [ "Plasma" ],
- extra_compile_args = [ '-Wall', '-g', '-O0' ]
+ libraries = [ "Plasma","Loam","Basement","Afferent","Ganglia","Impetus"],
+ extra_compile_args = [ '-Wall', '-g', '-O0']
  )
 
 distutils.core.setup \
