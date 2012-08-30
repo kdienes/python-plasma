@@ -5,7 +5,6 @@ import os.path
 import sys
 import distutils.core
 
-sys.path = [ '..' ] + sys.path
 import config
 
 if os.name == 'posix':
