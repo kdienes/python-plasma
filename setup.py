@@ -5,7 +5,8 @@ import os.path
 import sys
 import distutils.core
 
-import vars
+sys.path = [ '..' ] + sys.path
+import config
 
 if os.name == 'posix':
     CXX_libraries = [ 'stdc++', 'm' ]
@@ -18,8 +19,8 @@ if sys.platform != "win32":
 plasma = distutils.core.Extension \
 ("libplasma",
  [ "plasma.c" ],
- include_dirs = [ os.path.join (vars.G_SPEAK_DIR, 'include') ],
- library_dirs= [ os.path.join (vars.G_SPEAK_DIR, 'lib') ],
+ include_dirs = [ os.path.join (config.G_SPEAK_DIR, 'include') ],
+ library_dirs= [ os.path.join (config.G_SPEAK_DIR, 'lib') ],
  libraries = [ "Plasma","Loam","Basement","Afferent","Ganglia","Impetus"],
  extra_compile_args = [ '-Wall', '-g', '-O0']
  )
