@@ -44,8 +44,31 @@ static PyObject *HoseFetch (HoseObject *self, PyObject *args)
       Py_INCREF (Py_None);
       return Py_None;
     }
-    return SlawToPython (p);
+    PYTHON_OBCHECK (ret);
+
+    PyObject *pret = SlawToPython (p);
+    if (pret == NULL) { return pret; }
+
+    PyObject *hret = PyTuple_New (3);
+    PyTuple_SET_ITEM (hret, 0, pret);
+    PyTuple_SET_ITEM (hret, 1, PyFloat_FromDouble (stamp));
+    PyTuple_SET_ITEM (hret, 2, PyLong_FromLong (index));
+    return hret;
   }
+}
+
+static PyObject *HoseRunout (HoseObject *self, PyObject *args)
+{
+  if (! PyArg_ParseTuple (args, "")) {
+    return NULL;
+  }
+
+  ob_retort ret;
+  ret = pool_runout (self->hose);
+  PYTHON_OBCHECK (ret);
+  
+  Py_INCREF (Py_None);
+  return Py_None;
 }
 
 static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
@@ -90,6 +113,8 @@ static PyMethodDef HoseMethods[] = {
     "Fetch a protein from the pool." },
   { "deposit", (PyCFunction) HoseDeposit, METH_VARARGS,
     "Fetch a protein from the pool." },
+  { "runout", (PyCFunction) HoseRunout, METH_VARARGS,
+    "Set the pool hose's index to that following the last available protein." },
   { NULL }
 };
 
