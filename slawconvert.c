@@ -94,7 +94,11 @@ static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
   PyObject *pret = NULL;
   slaw s;
 
-  if (PyInt_Check (p)) {
+  if (p == Py_None) {
+    
+    s = slaw_nil ();
+
+  } else if (PyInt_Check (p)) {
 
     s = slaw_int32 (PyLong_AsLong (p));
 
