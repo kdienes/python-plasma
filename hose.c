@@ -51,8 +51,8 @@ static PyObject *HoseFetch (HoseObject *self, PyObject *args)
 
     PyObject *hret = PyTuple_New (3);
     PyTuple_SET_ITEM (hret, 0, pret);
-    PyTuple_SET_ITEM (hret, 1, PyFloat_FromDouble (stamp));
-    PyTuple_SET_ITEM (hret, 2, PyLong_FromLong (index));
+    PyTuple_SET_ITEM (hret, 1, PyLong_FromLong (index));
+    PyTuple_SET_ITEM (hret, 2, PyFloat_FromDouble (stamp));
     return hret;
   }
 }
