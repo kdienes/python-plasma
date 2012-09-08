@@ -71,6 +71,20 @@ static PyObject *HoseRunout (HoseObject *self, PyObject *args)
   return Py_None;
 }
 
+static PyObject *HoseToLast (HoseObject *self, PyObject *args)
+{
+  if (! PyArg_ParseTuple (args, "")) {
+    return NULL;
+  }
+
+  ob_retort ret;
+  ret = pool_tolast (self->hose);
+  PYTHON_OBCHECK (ret);
+  
+  Py_INCREF (Py_None);
+  return Py_None;
+}
+
 static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
 {
   ob_retort oret;
@@ -115,6 +129,8 @@ static PyMethodDef HoseMethods[] = {
     "Fetch a protein from the pool." },
   { "runout", (PyCFunction) HoseRunout, METH_VARARGS,
     "Set the pool hose's index to that following the last available protein." },
+  { "tolast", (PyCFunction) HoseToLast, METH_VARARGS,
+    "Set the pool hose's index to the last available protein." },
   { NULL }
 };
 
