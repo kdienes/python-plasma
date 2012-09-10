@@ -85,6 +85,50 @@ static PyObject *HoseToLast (HoseObject *self, PyObject *args)
   return Py_None;
 }
 
+static PyObject *HoseIndex (HoseObject *self, PyObject *args)
+{
+  if (! PyArg_ParseTuple (args, "")) {
+    return NULL;
+  }
+
+  ob_retort ret;
+  int64 index;
+  ret = pool_index (self->hose, &index);
+  PYTHON_OBCHECK (ret);
+  
+  return PyLong_FromLong (index);
+}
+
+static PyObject *HoseNewestIndex (HoseObject *self, PyObject *args)
+{
+  if (! PyArg_ParseTuple (args, "")) {
+    return NULL;
+  }
+
+  ob_retort ret;
+  int64 index;
+  ret = pool_newest_index (self->hose, &index);
+  PYTHON_OBCHECK (ret);
+  
+  return PyLong_FromLong (index);
+}
+
+static PyObject *HoseSeekTo (HoseObject *self, PyObject *args)
+{
+  int64 index;
+
+  if (! PyArg_ParseTuple (args, "l", &index)) {
+    return NULL;
+  }
+
+  ob_retort ret;
+  ret = pool_seekto (self->hose, index);
+  PYTHON_OBCHECK (ret);
+  
+  Py_INCREF (Py_None);
+  return Py_None;
+}
+
 static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
 {
   ob_retort oret;
@@ -131,6 +175,12 @@ static PyMethodDef HoseMethods[] = {
     "Set the pool hose's index to that following the last available protein." },
   { "tolast", (PyCFunction) HoseToLast, METH_VARARGS,
     "Set the pool hose's index to the last available protein." },
+  { "index", (PyCFunction) HoseIndex, METH_VARARGS,
+    "Determines the current position (index) of the specified pool hose." },
+  { "newestIndex", (PyCFunction) HoseNewestIndex, METH_VARARGS,
+    "Get the index of the newest protein in this pool.  Returns  POOL_NO_SUCH_PROTEIN if no proteins are in the pool." },
+  { "seekTo", (PyCFunction) HoseSeekTo, METH_VARARGS,
+    "Set the pool hose's index to the given value." },
   { NULL }
 };
 
