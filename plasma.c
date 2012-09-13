@@ -33,7 +33,8 @@ static PyMethodDef PlasmaMethods[] =
 static PyMethodDef PoolMethods[] =
   {
     { "dispose", (PyCFunction) PoolDispose, METH_VARARGS,
-    "Destroy a pool utterly." }
+      "Destroy a pool utterly." },
+    { NULL, NULL, 0, NULL }
   };
  
 struct plasma_exception {
