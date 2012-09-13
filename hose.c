@@ -8,17 +8,33 @@ static int HoseInit (HoseObject *self, PyObject *args, PyObject *keywords)
   pool_hose h;
   ob_retort ret;
   
-  PyObject *poolid;
-  static char *kwlist[] = { "pool", NULL };
+  char *poolname = NULL;
+  char *pooltype = "mmap";
+  int creatingly = 0;
+  PyObject *options = NULL;
+  static char *kwlist[] = { "pool", "type", "create", "options", NULL };
 
-  if (! PyArg_ParseTupleAndKeywords (args, keywords, "O", kwlist, &poolid))
+  if (! PyArg_ParseTupleAndKeywords (args, keywords, "s|siO", kwlist, &poolname, &pooltype, &creatingly, &options))
     return -1;
 
-  char *poolname = PyString_AsString (poolid);
+  slaw optslaw;
+  if (options != NULL) {
+    PyObject *ret = PythonToSlaw (options, &optslaw);
+    if (ret == NULL) {
+      return -1;
+    }
+  } else {
+    optslaw = slaw_map_empty ();
+  }
 
-  ret = pool_participate (poolname, &h, NULL);
-  if (ret != OB_OK) {
-    PyErr_SetString (PyExc_RuntimeError, ob_error_string (ret));
+  if (creatingly) {
+    ret = pool_participate_creatingly (poolname, pooltype, &h, optslaw);
+  } else {
+    ret = pool_participate (poolname, &h, optslaw);
+  }
+
+  if (! ((ret == OB_OK) || (creatingly && (ret == POOL_CREATED)))) {
+    PlasmaError (ret);
     return -1;
   }
 

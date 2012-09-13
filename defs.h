@@ -1,6 +1,8 @@
+void PlasmaError (ob_retort oret);
+
 #define PYTHON_OBCHECK(oret) \
   if (oret != OB_OK) { \
-    PyErr_SetString (PyExc_RuntimeError, ob_error_string (oret)); \
+    PlasmaError (oret); \
     return NULL; \
   }
 
