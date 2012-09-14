@@ -12,12 +12,12 @@ static int HoseInit (HoseObject *self, PyObject *args, PyObject *keywords)
   char *pooltype = "mmap";
   int creatingly = 0;
   PyObject *options = NULL;
+  slaw optslaw = slaw_nil ();
   static char *kwlist[] = { "pool", "type", "create", "options", NULL };
 
   if (! PyArg_ParseTupleAndKeywords (args, keywords, "s|siO", kwlist, &poolname, &pooltype, &creatingly, &options))
     return -1;
 
-  slaw optslaw;
   if (options != NULL) {
     PyObject *ret = PythonToSlaw (options, &optslaw);
     if (ret == NULL) {
@@ -32,6 +32,8 @@ static int HoseInit (HoseObject *self, PyObject *args, PyObject *keywords)
   } else {
     ret = pool_participate (poolname, &h, optslaw);
   }
+
+  slaw_free (optslaw);
 
   if (! ((ret == OB_OK) || (creatingly && (ret == POOL_CREATED)))) {
     PlasmaError (ret);
@@ -63,6 +65,8 @@ static PyObject *HoseFetch (HoseObject *self, PyObject *args)
     PYTHON_OBCHECK (ret);
 
     PyObject *pret = SlawToPython (p);
+    protein_free (p);
+
     if (pret == NULL) { return pret; }
 
     PyObject *hret = PyTuple_New (3);
@@ -162,12 +166,15 @@ static PyObject *HoseDeposit (HoseObject *self, PyObject *args)
   slaw dslaw, islaw;
   ret = PythonToSlaw (descrips, &dslaw);
   if (ret == NULL) { return ret; }
+  else { Py_DecRef (ret); }
   ret = PythonToSlaw (ingests, &islaw);
-  if (ret == NULL) { return ret; }
+  if (ret == NULL) { slaw_free (dslaw); return ret; }
+  else { Py_DecRef (ret); }
 
-  p = protein_from (dslaw, islaw);
+  p = protein_from_ff (dslaw, islaw);
   
   oret = pool_deposit_ex (self->hose, p, &idx, &timestamp);
+  protein_free (p);
   PYTHON_OBCHECK (oret);
 
   ret = PyTuple_New (2);

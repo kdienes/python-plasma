@@ -79,109 +79,19 @@ static PyObject *SlawToPython (bslaw s)
   } else if (slaw_is_nil (s)) {
 
     ret = Py_None;
+    Py_INCREF (ret);
  
   } else {
+
+    /* This should raise a SystemError instead of spamming the console
+       and aborting.  This is nontrivial though as we'd then have to
+       check for errors in all the returns from SlawToPython, which in
+       turn would make refcounting challenging.  Maybe easier to
+       switch to something like cython? */
+    /* https://redmine.hadronindustries.com/redmine/issues/153 */
 
     UNKNOWN_TYPE (s);
   }
 
-  Py_INCREF (ret);
   return ret;
-}
-
-static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
-{
-  PyObject *pret = NULL;
-  slaw s;
-
-  if (p == Py_None) {
-    
-    s = slaw_nil ();
-
-  } else if (PyInt_Check (p)) {
-
-    s = slaw_int32 (PyLong_AsLong (p));
-
-  } else if (PyLong_Check (p)) {
-
-    s = slaw_int32 (PyInt_AsLong (p));
-
-  } else if (PyFloat_Check (p)) {
-
-    s = slaw_float64 (PyFloat_AsDouble (p));
-
-  } else if (PyString_Check (p)) {
-
-    s = slaw_string (PyString_AsString (p));
-
-  } else if (PyDict_Check (p)) {
-
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-    
-    slabu *su = slabu_new ();
-
-    for (;;) {
-      int ret = PyDict_Next (p, &pos, &key, &value);
-      if (ret == 0) { break; }
-      
-      slaw car, cdr;
-
-      pret = PythonToSlaw (key, &car);
-      if (pret == NULL) { return pret; }
-
-      pret = PythonToSlaw (value, &cdr);
-      if (pret == NULL) { return pret; }
-
-      int64 rr = slabu_list_add (su, slaw_cons (car, cdr));
-      if (rr < 0) { PYTHON_OBCHECK (rr) };
-    }
-    
-    s = slaw_map (su);
-
-
-  } else if (PyTuple_Check (p)) {
-
-    slabu *su = slabu_new ();
-    int i = 0;
-
-    for (i = 0; i < PyTuple_Size (p); i++) {
-
-      PyObject *pp = PyTuple_GetItem (p, i);
-      slaw ns;
-
-      pret = PythonToSlaw (pp, &ns);
-      if (pret == NULL) { return pret; }
-
-      int64 rr = slabu_list_add (su, ns);
-      if (rr < 0) { PYTHON_OBCHECK (rr) };
-    }
-    
-    s = slaw_list (su);
-
-  } else if (PyList_Check (p)) {
-
-    slabu *su = slabu_new ();
-    int i = 0;
-
-    for (i = 0; i < PyList_Size (p); i++) {
-
-      PyObject *pp = PyList_GetItem (p, i);
-      slaw ns;
-
-      pret = PythonToSlaw (pp, &ns);
-      if (pret == NULL) { return pret; }
-
-      int64 rr = slabu_list_add (su, ns);
-      if (rr < 0) { PYTHON_OBCHECK (rr) };
-    }
-    
-    s = slaw_list (su);
-
-  } else {
-    PYTHON_OBCHECK (OB_INVALID_ARGUMENT);
-  }
-  
-  *pslaw = s;
-  return Py_None;
 }

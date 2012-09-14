@@ -7,8 +7,9 @@
 
 #include "defs.h"
 
-#include "slawconvert.c"
-#include "slaw.c"
+#include "slawtopython.c"
+#include "pythontoslaw.c"
+// #include "slaw.c"
 #include "hose.c"
 
 static PyObject *PoolDispose (HoseObject *self, PyObject *args)
@@ -59,9 +60,11 @@ PyMODINIT_FUNC initlibplasma (void)
   if (PyType_Ready (&HoseObjectType) < 0)
     return;
 
+#if 0
   SlawObjectType.tp_new = PyType_GenericNew;
   if (PyType_Ready (&SlawObjectType) < 0)
     return;
+#endif
 
   m = Py_InitModule3 ("libplasma", PlasmaMethods, "libplasma doc");
   if (m == NULL)
@@ -72,11 +75,11 @@ PyMODINIT_FUNC initlibplasma (void)
     return;
 
   Py_INCREF (&HoseObjectType);
-  Py_INCREF (&SlawObjectType);
+  // Py_INCREF (&SlawObjectType);
   Py_INCREF (mpool);
   
   PyModule_AddObject (m, "hose", (PyObject *) &HoseObjectType);
-  PyModule_AddObject (m, "slaw", (PyObject *) &SlawObjectType);
+  // PyModule_AddObject (m, "slaw", (PyObject *) &SlawObjectType);
   PyModule_AddObject (m, "pool", (PyObject *) mpool);
 
   struct plasma_exception *e = exceptions;
