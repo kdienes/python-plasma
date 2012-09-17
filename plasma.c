@@ -49,6 +49,7 @@ struct plasma_exception {
 
 struct plasma_exception exceptions[] = { 
   PLASMA_EXCEPTION_ENTRY(POOL_NO_SUCH_POOL),
+  PLASMA_EXCEPTION_ENTRY(POOL_NO_SUCH_PROTEIN),
   { 0, NULL, NULL, NULL }
 };
 
