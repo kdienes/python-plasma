@@ -23,6 +23,14 @@ static PyObject *PythonToSlaw (PyObject *p, slaw *pslaw)
 
     s = slaw_string (PyString_AsString (p));
 
+  } else if (PyUnicode_Check (p)) {
+
+    PyObject *np = PyUnicode_AsUTF8String (p);
+    if (np == NULL) { return np; }
+
+    s = slaw_string (PyString_AsString (np));
+    Py_DecRef (np);
+
   } else if (PyDict_Check (p)) {
 
     PyObject *key, *value;
