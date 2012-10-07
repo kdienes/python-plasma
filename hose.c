@@ -1,12 +1,15 @@
 typedef struct {
   PyObject_HEAD
-  pool_gang gang;
-} PoolGangObject;  
+  pool_hose hose;
+} HoseObject;
 
 typedef struct {
   PyObject_HEAD
-  pool_hose hose;
-} HoseObject;
+  pool_gang gang;
+  HoseObject *children[128];
+  int size;
+  int capacity;
+} PoolGangObject;  
 
 static int HoseInit (HoseObject *self, PyObject *args, PyObject *keywords)
 {
@@ -294,6 +297,9 @@ static int PoolGangInit (PoolGangObject *self, PyObject *args, PyObject *keyword
     return -1;
   }
 
+  self->capacity = 128;
+  self->size = 0;
+
   return 0;
 }
 
@@ -305,6 +311,9 @@ static PyObject *PoolGangJoin (PoolGangObject *self, PyObject *args)
   if (! PyArg_ParseTuple (args, "O!", &HoseObjectType, &phose)) {
     return NULL;
   }
+  
+  assert (self->size < self->capacity);
+  self->children[self->size++] = phose;
   
   oret = pool_join_gang (self->gang, phose->hose);
   PYTHON_OBCHECK (oret);
@@ -334,15 +343,28 @@ static PyObject *PoolGangFetch (PoolGangObject *self, PyObject *args)
     }
     PYTHON_OBCHECK (ret);
 
+    HoseObject *pph = NULL;
+    for (int i = 0; i < self->size; i++) {
+      if (self->children[i]->hose == ph) {
+	pph = self->children[i];
+      }
+    }
+    if (pph == NULL) {
+      PyErr_SetString (PyExc_KeyError, "unable to locate pool");
+      return NULL;
+    }
+
     PyObject *pret = SlawToPython (p);
     protein_free (p);
 
     if (pret == NULL) { return pret; }
 
-    PyObject *hret = PyTuple_New (3);
+    PyObject *hret = PyTuple_New (4);
     PyTuple_SET_ITEM (hret, 0, pret);
-    PyTuple_SET_ITEM (hret, 1, PyLong_FromLong (index));
-    PyTuple_SET_ITEM (hret, 2, PyFloat_FromDouble (stamp));
+    Py_INCREF (pph);
+    PyTuple_SET_ITEM (hret, 1, pph);
+    PyTuple_SET_ITEM (hret, 2, PyLong_FromLong (index));
+    PyTuple_SET_ITEM (hret, 3, PyFloat_FromDouble (stamp));
     return hret;
   }
 }
