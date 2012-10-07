@@ -344,7 +344,8 @@ static PyObject *PoolGangFetch (PoolGangObject *self, PyObject *args)
     PYTHON_OBCHECK (ret);
 
     HoseObject *pph = NULL;
-    for (int i = 0; i < self->size; i++) {
+    int i;
+    for (i = 0; i < self->size; i++) {
       if (self->children[i]->hose == ph) {
 	pph = self->children[i];
       }
