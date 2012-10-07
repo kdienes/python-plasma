@@ -2,6 +2,7 @@
 #include <structmember.h>
 
 #include <libPlasma/c/pool.h>
+
 #include <libPlasma/c/slaw.h>
 #include <libPlasma/c/protein.h>
 
@@ -61,6 +62,10 @@ PyMODINIT_FUNC initlibplasma (void)
   if (PyType_Ready (&HoseObjectType) < 0)
     return;
 
+  PoolGangObjectType.tp_new = PyType_GenericNew;
+  if (PyType_Ready (&PoolGangObjectType) < 0)
+    return;
+
 #if 0
   SlawObjectType.tp_new = PyType_GenericNew;
   if (PyType_Ready (&SlawObjectType) < 0)
@@ -76,10 +81,12 @@ PyMODINIT_FUNC initlibplasma (void)
     return;
 
   Py_INCREF (&HoseObjectType);
+  Py_INCREF (&PoolGangObjectType);
   // Py_INCREF (&SlawObjectType);
   Py_INCREF (mpool);
   
   PyModule_AddObject (m, "hose", (PyObject *) &HoseObjectType);
+  PyModule_AddObject (m, "gang", (PyObject *) &PoolGangObjectType);
   // PyModule_AddObject (m, "slaw", (PyObject *) &SlawObjectType);
   PyModule_AddObject (m, "pool", (PyObject *) mpool);
 
