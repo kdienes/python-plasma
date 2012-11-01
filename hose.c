@@ -217,6 +217,11 @@ static PyObject *HoseNotifyHandle (HoseObject *self, PyObject *args)
   return PyLong_FromLong (fds[1].fd);
 }
 
+static PyObject* HoseName(HoseObject *self,PyObject * args)
+{
+  return PyString_FromString(pool_name(self->hose));
+}
+
 static PyMemberDef HoseMembers[] = {
   { NULL }
 };
@@ -238,6 +243,7 @@ static PyMethodDef HoseMethods[] = {
     "Set the pool hose's index to the given value." },
   { "notifyHandle", (PyCFunction) HoseNotifyHandle, METH_VARARGS,
     "Get the (file descriptor) notify handle for the pool hose." },
+  { "name", (PyCFunction) HoseName,METH_VARARGS,"the name of the connected hose" },
   { NULL }
 };
 
