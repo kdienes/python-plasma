@@ -4,7 +4,7 @@ all: build
 
 build:
 	rm -rf build
-	ARCHFLAGS="-arch i386" python setup.py build
+	ARCHFLAGS="-arch x86_64" python setup.py build
 
 install:
 	rm -rf build
