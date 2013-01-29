@@ -5,7 +5,11 @@ import os.path
 import sys
 import distutils.core
 
-import config
+sys.path.insert (0, os.path.sep.join (os.path.realpath (__file__).split (os.path.sep)[0:-2] + ['python-hadron']))
+print sys.path
+
+import hadron.tools
+import hadron.tools.config
 
 if sys.platform != "win32":
     compiler = [ '-Wall -Werror -fpermissive -Wno-strict-prototypes' ]
@@ -13,9 +17,9 @@ if sys.platform != "win32":
 libplasma = distutils.core.Extension \
 ('libplasma',
  [ 'plasma.c' ],
- include_dirs = [ os.path.join (config.G_SPEAK_DIR, 'include') ],
- library_dirs = [ os.path.join (config.G_SPEAK_DIR, 'lib') ],
- runtime_library_dirs = [ os.path.join (config.G_SPEAK_DIR, 'lib') ],
+ include_dirs = [ os.path.join (hadron.tools.config.G_SPEAK_DIR, 'include') ],
+ library_dirs = [ os.path.join (hadron.tools.config.G_SPEAK_DIR, 'lib') ],
+ runtime_library_dirs = [ os.path.join (hadron.tools.config.G_SPEAK_DIR, 'lib') ],
  libraries = [ 'Plasma' ],
  extra_compile_args = [ '-Wall', '-g', '-O0']
  )
