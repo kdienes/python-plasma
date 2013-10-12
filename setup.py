@@ -8,7 +8,7 @@ import distutils.core
 sys.path.insert (0, os.path.sep.join (os.path.realpath (__file__).split (os.path.sep)[0:-2] + ['python-hadron']))
 print sys.path
 
-G_SPEAK_DIR = '/opt/oblong/g-speak3.9'
+G_SPEAK_DIR = '/opt/oblong/g-speak3.11'
 
 if sys.platform != "win32":
     compiler = [ '-Wall -Werror -fpermissive -Wno-strict-prototypes' ]
@@ -20,7 +20,7 @@ libplasma = distutils.core.Extension \
  library_dirs = [ os.path.join (G_SPEAK_DIR, 'lib') ],
  runtime_library_dirs = [ os.path.join (G_SPEAK_DIR, 'lib') ],
  libraries = [ 'Plasma' ],
- extra_compile_args = [ '-Wall', '-g', '-O0']
+ extra_compile_args = [ '-Wall', '-g', '-O0', '-I../..']
  )
 
 distutils.core.setup \
