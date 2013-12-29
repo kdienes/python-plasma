@@ -5,9 +5,6 @@ import os.path
 import sys
 import distutils.core
 
-sys.path.insert (0, os.path.sep.join (os.path.realpath (__file__).split (os.path.sep)[0:-2] + ['python-hadron']))
-print sys.path
-
 G_SPEAK_DIR = '/opt/oblong/g-speak3.11'
 
 if sys.platform != "win32":
