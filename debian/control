@@ -2,7 +2,7 @@ Source: python-plasma
 Maintainer: Klee Dienes <klee.dienes@hadronindustries.com>
 Section: python
 Priority: optional
-Build-Depends: python-all-dev (>= 2.6.6-3), debhelper (>= 7), dh-python, oblong-plasma-dev
+Build-Depends: python-all-dev (>= 2.6.6-3), debhelper (>= 7), dh-python | python-support, oblong-plasma3.11
 Standards-Version: 3.9.1
 X-Python-Version: >= 2.5
 
