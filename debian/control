@@ -3,7 +3,7 @@ Maintainer: Klee Dienes <klee.dienes@hadronindustries.com>
 Section: python
 Priority: optional
 Build-Depends: python-all-dev (>= 2.6.6-3), debhelper (>= 7), dh-python, oblong-plasma-dev
-Standards-Version: 3.9.1
+Standards-Version: 3.9.5
 X-Python-Version: >= 2.5
 
 Package: python-plasma
