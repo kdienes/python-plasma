@@ -25,6 +25,7 @@ import optparse
 import re
 import tempfile
 import os
+import shutil
 
 class g_speak_setter ():
     
@@ -48,7 +49,7 @@ class g_speak_setter ():
         with os.fdopen(handle, 'w') as f:
             f.write (s)
 
-        os.rename (path, fn)
+        shutil.move (path, fn)
         
 class g_speak_setter_app ():
 
@@ -85,5 +86,5 @@ class g_speak_setter_app ():
             self.setter.substitute (x)
 
 if __name__ == "__main__":
-    s = g_speak_setter_app ([ 'CMakeLists.txt' ])
+    s = g_speak_setter_app ([ 'setup.py' ])
     s.substitute ()

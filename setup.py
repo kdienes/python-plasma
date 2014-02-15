@@ -25,7 +25,7 @@ import os.path
 import sys
 import distutils.core
 
-G_SPEAK_DIR = '/opt/oblong/g-speak3.8'
+G_SPEAK_DIR = '/opt/oblong/g-speak3.11'
 
 if sys.platform != "win32":
     compiler = [ '-Wall -Werror -fpermissive -Wno-strict-prototypes' ]
